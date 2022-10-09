@@ -13,7 +13,11 @@ namespace LinqXmlModule
     {
         static void Main(string[] args)
         {
-            CreateXml();
+            CreateXml("fuel.xml");
+            CreateXml("fuel_with_namespace.xml", true);
+            //QueryXml();
+            QueryXmlWithNamespace();
+
 
 
 
@@ -35,22 +39,58 @@ namespace LinqXmlModule
             //document.Save("fuel.xml");
         }
 
-        private static void CreateXml()
+        private static void QueryXmlWithNamespace()
         {
+            var ns = (XNamespace)"http://pluralsight.com/cars/2016";
+            var ex = (XNamespace)"http://pluralsight.com/cars/2016/ex";
+            var document = XDocument.Load("fuel_with_namespace.xml");
+
+            var xmlQueryWithNameSpace =
+                from element in document.Element(ns + "Cars")?.Elements(ex + "Car")
+                                                        ?? Enumerable.Empty<XElement>()
+                where element.Attribute("Manufacturer")?.Value == "BMW"
+                select element.Attribute("Name").Value;
+
+            foreach (var name in xmlQueryWithNameSpace)
+            {
+                Console.WriteLine(name);
+            }
+        }
+
+        private static void QueryXml()
+        {
+            var document = XDocument.Load("fuel.xml");
+            var xmlQuery =
+                from element in document.Element("Cars").Elements("Car")
+                where element.Attribute("Manufacturer")?.Value == "BMW"
+                select element.Attribute("Name").Value;
+
+            foreach (var name in xmlQuery)
+            {
+                Console.WriteLine(name);
+            }
+        }
+
+        private static void CreateXml(string fileName, bool useNamespaces = false)
+        {
+            var ns = (XNamespace)"http://pluralsight.com/cars/2016";
+            var ex = (XNamespace)"http://pluralsight.com/cars/2016/ex";
+
             var records = ProcessCars("fuel.csv");
 
             var document = new XDocument();
-            var cars = new XElement("Cars",
+            var cars = new XElement(useNamespaces ? ns + "Cars" : "Cars",
 
                 from record in records
-                select new XElement("Car",
+                select new XElement(useNamespaces ? ex + "Car" : "" + "Car",
                                 new XAttribute("Name", record.Name),
                                 new XAttribute("Combined", record.Combined),
                                 new XAttribute("Manufacturer", record.Manufacturer))
                 );
 
+            cars.Add(new XAttribute(XNamespace.Xmlns + "ex", ex));
             document.Add(cars);
-            document.Save("fuel.xml");
+            document.Save(fileName);
         }
 
         private static List<Car> ProcessCars(string path)
