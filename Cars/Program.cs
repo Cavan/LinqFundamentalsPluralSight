@@ -25,15 +25,98 @@ namespace Cars
                     car.Combined
                 };
 
-
-
-
-
-                foreach (var car in query.Take(10))
+            var joinQuery =
+                from car in cars
+                join manufacturer in manufacturers
+                    on car.Manufacturer equals manufacturer.Name
+                orderby car.Combined descending, car.Name ascending
+                select new
                 {
-                    Console.WriteLine($"{car.Manufacturer} {car.Name} : {car.Combined}");
+                    manufacturer.Headquarters,
+                    car.Name,
+                    car.Combined
+                };
+
+            var joinQueryMethodSyntax =
+                cars.Join(manufacturers,
+                            c => c.Manufacturer,
+                            m => m.Name, (c, m) => new
+                            {
+                                m.Headquarters,
+                                c.Name,
+                                c.Combined
+                            })
+                    .OrderByDescending(c => c.Combined)
+                    .ThenBy(c => c.Name);
+
+            // Joining multiple objects using anonymous types
+            var joinMultipleObjects =
+                from car in cars
+                join manufacturer in manufacturers
+                    on new
+                    {
+                        car.Manufacturer,
+                        car.Year
+                    }
+                    equals
+                    new
+                    {
+                        Manufacturer = manufacturer.Name,
+                        manufacturer.Year
+                    }
+                orderby car.Combined descending, car.Name ascending
+                select new
+                {
+                    manufacturer.Headquarters,
+                    car.Name,
+                    car.Combined
+                };
+
+            var joinMultipleObjectsQueryMethodSyntax =
+                cars.Join(manufacturers,
+                            c => new { c.Manufacturer, c.Year},
+                            m => new { Manufacturer = m.Name, m.Year },
+                            (c, m) => new
+                            {
+                                m.Headquarters,
+                                c.Name,
+                                c.Combined
+                            })
+                    .OrderByDescending(c => c.Combined)
+                    .ThenBy(c => c.Name);
+
+            var processQuery = joinMultipleObjectsQueryMethodSyntax;
+
+            var groupingQuery =
+                from car in cars
+                group car by car.Manufacturer.ToUpper() into manufacturer
+                orderby manufacturer.Key
+                select manufacturer;
+
+
+            var groupingQueryMethodSyntax =
+                cars.GroupBy(c => c.Manufacturer.ToUpper())
+                    .OrderBy(g => g.Key);
+
+            var processGroupingQuery = groupingQuery;
+
+
+            foreach (var group in groupingQueryMethodSyntax)
+            {
+                Console.WriteLine(group.Key);
+                foreach(var car in group.OrderByDescending(c => c.Combined).Take(2))
+                {
+                    Console.WriteLine($"\t{car.Name} : {car.Combined}");
                 }
+            }
+
+            //foreach (var car in processQuery.Take(10))
+            //{
+            //    Console.WriteLine($"{car.Headquarters} {car.Name} : {car.Combined}");
+            //}
+
         }
+
 
         private static List<Car> ProcessCars(string path)
         {
@@ -67,7 +150,7 @@ namespace Cars
     }
 
     public static class CarExtensions
-    {        
+    {
         public static IEnumerable<Car> ToCar(this IEnumerable<string> source)
         {
             foreach (var line in source)
