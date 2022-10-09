@@ -98,17 +98,92 @@ namespace Cars
                 cars.GroupBy(c => c.Manufacturer.ToUpper())
                     .OrderBy(g => g.Key);
 
-            var processGroupingQuery = groupingQuery;
-
-
-            foreach (var group in groupingQueryMethodSyntax)
-            {
-                Console.WriteLine(group.Key);
-                foreach(var car in group.OrderByDescending(c => c.Combined).Take(2))
+            var groupJoinQuery =
+                from manufacturer in manufacturers
+                join car in cars on manufacturer.Name equals car.Manufacturer
+                    into carGroup
+                select new
                 {
-                    Console.WriteLine($"\t{car.Name} : {car.Combined}");
-                }
+                    Manufacturer = manufacturer,
+                    Cars = carGroup
+                };
+
+            var groupJoinQueryMethodSyntax =
+                manufacturers.GroupJoin(cars, m => m.Name, c => c.Manufacturer,
+                    (m, g) =>
+                        new
+                        {
+                            Manufacturer = m,
+                            Cars = g
+                        })
+                .OrderBy(m => m.Manufacturer.Name);
+
+            var topFuelEfficientCarsByCountry =
+                from manufacturer in manufacturers
+                join car in cars on manufacturer.Name equals car.Manufacturer
+                    into carGroup
+                select new
+                {
+                    Manufacturer = manufacturer,
+                    Cars = carGroup
+                } into result
+                group result by result.Manufacturer.Headquarters;
+
+            var aggregateQuery =
+                from car in cars
+                group car by car.Manufacturer into carGroup
+                select new
+                {
+                    Name = carGroup.Key,
+                    Max = carGroup.Max(c => c.Combined),
+                    Min = carGroup.Min(c => c.Combined),
+                    Avg = carGroup.Average(c => c.Combined)
+                } into result
+                orderby result.Max descending
+                select result;
+
+            var aggregateQueryMethodSyntax =
+                cars.GroupBy(c => c.Manufacturer)
+                    .Select(g =>
+                    {
+                        var results = g.Aggregate(new CarStatistics(),
+                                                (acc, c) => acc.Accumulate(c),
+                                                acc => acc.Compute());
+                        return new
+                        {
+                            Name = g.Key,
+                            Avg = results.Average,
+                            Min = results.Min,
+                            Max = results.Max
+                        };
+                    })
+                    .OrderByDescending(r => r.Max);
+
+
+            var processAggregateQuery = aggregateQueryMethodSyntax;
+
+            foreach(var result in processAggregateQuery)
+            {
+                Console.WriteLine($"{result.Name}");
+                Console.WriteLine($"\t Max: {result.Max}");
+                Console.WriteLine($"\t Minx: {result.Min}");
+                Console.WriteLine($"\t Avg: {result.Avg}");
             }
+
+
+           // var processGroupingQuery = topFuelEfficientCarsByCountry;
+
+
+            //foreach (var group in processGroupingQuery)
+            //{
+            //    Console.WriteLine($"{group.Key}");
+            //    foreach (var car in group.SelectMany(g => g.Cars)
+            //                            .OrderByDescending(c => c.Combined)
+            //                            .Take(3))
+            //    {
+            //        Console.WriteLine($"\t{car.Name} : {car.Combined}");
+            //    }
+            //}
 
             //foreach (var car in processQuery.Take(10))
             //{
@@ -170,5 +245,36 @@ namespace Cars
                 };
             }
         }
+    }
+
+    public class CarStatistics
+    {
+        public CarStatistics()
+        {
+            Max = Int32.MinValue;
+            Min = Int32.MaxValue;
+        }
+
+        public CarStatistics Accumulate(Car car)
+        {
+            Count += 1;
+            Total += car.Combined;
+            Max = Math.Max(Max, car.Combined);
+            Min = Math.Min(Min, car.Combined);
+
+            return this;
+        }
+
+        public CarStatistics Compute()
+        {
+            Average = Total / Count;
+            return this;
+        }
+
+        public int Max { get; set; }
+        public int Min { get; set; }
+        public int Total { get; set; }
+        public int Count { get; set; }
+        public double Average { get; set; }
     }
 }
