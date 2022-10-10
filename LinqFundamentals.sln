@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cars", "Cars\Cars.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqXmlModule", "LinqXamlModule\LinqXmlModule.csproj", "{0803382B-89FF-4212-ACA1-0477C77B95FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqEntityFramework", "LinqEntityFramework\LinqEntityFramework.csproj", "{C7129D53-FE79-4D47-A5F2-31C45DA87682}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{0803382B-89FF-4212-ACA1-0477C77B95FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0803382B-89FF-4212-ACA1-0477C77B95FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0803382B-89FF-4212-ACA1-0477C77B95FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7129D53-FE79-4D47-A5F2-31C45DA87682}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7129D53-FE79-4D47-A5F2-31C45DA87682}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7129D53-FE79-4D47-A5F2-31C45DA87682}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7129D53-FE79-4D47-A5F2-31C45DA87682}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
